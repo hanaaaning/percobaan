@@ -605,11 +605,9 @@
 
   <script>
     const SUPABASE_URL = 'https://xogqczxmdytxopoenyah.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_UUX7I9H91_Il6VfjWQJlzQ_ZlSRiLhc';
+    const SUPABASE_ANON_KEY = 'sb_publishable_UUX719H91_I16vFjWQJ12Q_Z1SRiLhc';
 
-    const supabase = (SUPABASE_URL && SUPABASE_ANON_KEY && SUPABASE_URL !== 'https://xogqczxmdytxopoenyah.supabase.co')
-      ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-      : null;
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const defaultConfig = {
       store_title: 'MYCLIPS',
