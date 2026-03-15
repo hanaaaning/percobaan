@@ -1,0 +1,1624 @@
+<!doctype html>
+<html lang="id" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MYCLIPS - Premium Apps Store</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { font-family: 'Poppins', sans-serif; }
+    body { box-sizing: border-box; }
+
+    .texture-bg {
+      background-color: #FFF0F5;
+      background-image:
+        radial-gradient(circle at 20% 50%, rgba(255, 182, 193, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 192, 203, 0.4) 0%, transparent 40%),
+        radial-gradient(circle at 40% 80%, rgba(255, 174, 185, 0.25) 0%, transparent 45%),
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    }
+
+    .card-texture {
+      background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,245,250,0.9) 100%);
+      backdrop-filter: blur(10px);
+    }
+
+    .price-tag {
+      background: linear-gradient(135deg, #FF6B9D 0%, #FF8FAB 100%);
+    }
+
+    .btn-checkout {
+      background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+      transition: all 0.3s ease;
+    }
+
+    .btn-checkout:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(37, 211, 102, 0.4);
+    }
+
+    .product-card {
+      transition: all 0.3s ease;
+    }
+
+    .product-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .package-option {
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .package-option:hover {
+      border-color: #FF6B9D;
+      background: rgba(255, 107, 157, 0.05);
+    }
+
+    .package-option.selected {
+      border-color: #FF6B9D;
+      background: linear-gradient(135deg, rgba(255, 107, 157, 0.1) 0%, rgba(255, 143, 171, 0.1) 100%);
+    }
+
+    .modal-overlay {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(5px);
+    }
+
+    .strikethrough {
+      text-decoration: line-through;
+      opacity: 0.6;
+    }
+
+    .discount-badge {
+      background: linear-gradient(135deg, #FF4757 0%, #FF6B81 100%);
+    }
+
+    .floating-hearts {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .heart {
+      position: absolute;
+      font-size: 20px;
+      opacity: 0.1;
+      animation: float 15s infinite ease-in-out;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-20px) rotate(10deg); }
+    }
+
+    .toast {
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    .tab-button {
+      transition: all 0.3s ease;
+    }
+
+    .tab-button.active {
+      background: linear-gradient(135deg, #FF6B9D 0%, #FF8FAB 100%);
+      color: white;
+    }
+
+    .tab-button:not(.active) {
+      background: transparent;
+      color: #999;
+    }
+
+    .order-item {
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .status-pending {
+      background: rgba(255, 193, 7, 0.2);
+      color: #F57C00;
+    }
+
+    .status-processing {
+      background: rgba(33, 150, 243, 0.15);
+      color: #1565C0;
+    }
+
+    .status-completed {
+      background: rgba(76, 175, 80, 0.2);
+      color: #2E7D32;
+    }
+
+    .status-expired {
+      background: rgba(158, 158, 158, 0.18);
+      color: #616161;
+    }
+
+    .info-tooltip {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .info-tooltip:hover .tooltip-text {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .tooltip-text {
+      position: absolute;
+      top: -80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.9);
+      color: white;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.5rem;
+      font-size: 0.75rem;
+      white-space: nowrap;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      z-index: 50;
+    }
+
+    .tooltip-text::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 4px solid transparent;
+      border-top-color: rgba(0, 0, 0, 0.9);
+    }
+
+    .faq-answer.hidden {
+      display: none;
+    }
+
+    .sort-btn.active {
+      background: linear-gradient(135deg, #FF6B9D 0%, #FF8FAB 100%);
+      color: white;
+      border-color: #FF6B9D;
+    }
+  </style>
+</head>
+<body class="h-full">
+  <div class="h-full overflow-auto texture-bg relative">
+    <div class="floating-hearts">
+      <span class="heart" style="left: 5%; top: 10%; animation-delay: 0s;">💕</span>
+      <span class="heart" style="left: 15%; top: 60%; animation-delay: 2s;">💗</span>
+      <span class="heart" style="left: 25%; top: 30%; animation-delay: 4s;">💖</span>
+      <span class="heart" style="left: 45%; top: 70%; animation-delay: 1s;">💕</span>
+      <span class="heart" style="left: 65%; top: 20%; animation-delay: 3s;">💗</span>
+      <span class="heart" style="left: 75%; top: 50%; animation-delay: 5s;">💖</span>
+      <span class="heart" style="left: 85%; top: 80%; animation-delay: 2.5s;">💕</span>
+      <span class="heart" style="left: 95%; top: 40%; animation-delay: 4.5s;">💗</span>
+    </div>
+
+    <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
+
+    <header class="relative z-10 py-6 px-4 border-b border-pink-200">
+      <div class="max-w-5xl mx-auto">
+        <div class="text-center mb-6">
+          <div class="inline-block">
+            <h1 id="store-title" class="text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-pink-500 via-pink-400 to-rose-400 bg-clip-text text-transparent drop-shadow-sm">MYCLIPS</h1>
+            <p id="store-tagline" class="text-pink-400 font-medium mt-1 tracking-wide">✨ Premium Apps Store ✨</p>
+          </div>
+        </div>
+        <div class="flex gap-4 justify-center border-b border-pink-100 flex-wrap">
+          <button class="tab-button active px-6 py-3 font-semibold rounded-t-xl transition-all" data-tab="products">🛍️ Products</button>
+          <button class="tab-button px-6 py-3 font-semibold rounded-t-xl transition-all" data-tab="history">📋 Order History</button>
+          <button class="tab-button px-6 py-3 font-semibold rounded-t-xl transition-all" data-tab="admin">🔐 Admin</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="relative z-10 px-4 pb-8">
+      <div class="max-w-5xl mx-auto">
+        <div id="products-tab" class="tab-content">
+          <p class="text-gray-500 text-sm mt-3 mb-6 text-center">Dapatkan akses premium dengan harga terjangkau! Dijamin GARANSI 100%!</p>
+
+          <div class="grid md:grid-cols-3 gap-6">
+            <div class="product-card card-texture rounded-3xl shadow-lg shadow-pink-200/40 overflow-hidden border border-pink-100">
+              <div class="relative">
+                <div class="absolute top-3 right-3 z-20">
+                  <div class="info-tooltip">
+                    <button class="text-pink-500 hover:bg-pink-100 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold border-2 border-pink-300 bg-white">i</button>
+                    <span class="tooltip-text">Edit desain unlimited, template premium, kolaborasi tim</span>
+                  </div>
+                </div>
+                <div class="price-tag text-white text-center py-3 flex items-center justify-center gap-2 pr-8">
+                  <span class="text-2xl">🎨</span>
+                  <h2 class="font-bold text-lg">Canva Premium</h2>
+                </div>
+              </div>
+              <div class="p-5 space-y-3">
+                <div class="package-option rounded-xl border-2 border-pink-200 p-3" data-product="Canva Premium" data-package="1 Bulan" data-price="3000" data-needs-email="true">
+                  <div class="flex justify-between items-center">
+                    <div>
+                      <p class="font-semibold text-gray-700">1 Bulan</p>
+                      <p class="text-xs text-gray-500 mt-1">👤 1 akun</p>
+                    </div>
+                    <div class="text-right">
+                      <p class="font-bold text-pink-500 text-lg">Rp 3K</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="package-option rounded-xl border-2 border-pink-200 p-3 relative" data-product="Canva Premium" data-package="3 Bulan" data-price="8000" data-needs-email="true">
+                  <div class="discount-badge absolute -top-2 -right-2 text-white text-xs px-2 py-1 rounded-full font-bold">PROMO</div>
+                  <div class="flex justify-between items-center">
+                    <div>
+                      <p class="font-semibold text-gray-700">3 Bulan</p>
+                      <p class="text-xs text-gray-500 mt-1">👤 1 akun</p>
+                    </div>
+                    <div class="text-right">
+                      <span class="text-gray-400 text-sm strikethrough">Rp 9K</span>
+                      <p class="font-bold text-pink-500 text-lg">Rp 8K</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="package-option rounded-xl border-2 border-pink-200 p-3 relative" data-product="Canva Premium" data-package="Paket Grup (15 akun)/Bulan" data-price="10000" data-needs-email="true">
+                  <div class="discount-badge absolute -top-2 -right-2 text-white text-xs px-2 py-1 rounded-full font-bold">HEMAT</div>
+                  <div class="flex justify-between items-center">
+                    <div>
+                      <p class="font-semibold text-gray-700">Paket Grup</p>
+                      <p class="text-xs text-gray-500">(15 akun) /bulan</p>
+                    </div>
+                    <div class="text-right">
+                      <span class="text-gray-400 text-sm strikethrough">Rp 25K</span>
+                      <p class="font-bold text-pink-500 text-lg">Rp 10K</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="product-card card-texture rounded-3xl shadow-xl shadow-pink-200/50 overflow-hidden border border-pink-100">
+              <div class="relative">
+                <div class="absolute top-3 right-3 z-20">
+                  <div class="info-tooltip">
+                    <button class="text-pink-500 hover:bg-pink-100 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold border-2 border-pink-300 bg-white">i</button>
+                    <span class="tooltip-text">Edit video tanpa watermark, effect premium, export 4K</span>
+                  </div>
+                </div>
+                <div class="price-tag text-white text-center py-3 flex items-center justify-center gap-2 pr-8">
+                  <span class="text-2xl">🎬</span>
+                  <h2 class="font-bold text-lg">CapCut Premium</h2>
+                </div>
+              </div>
+              <div class="p-5 space-y-3">
+                <div class="package-option rounded-xl border-2 border-pink-200 p-3" data-product="CapCut Premium" data-package="7 Hari" data-price="6000" data-is-capcut="true">
+                  <div class="flex justify-between items-center">
+                    <div>
+                      <p class="font-semibold text-gray-700">7 Hari</p>
+                      <p class="text-xs text-gray-500 mt-1">🔒 Privat (Bukan Sharing)</p>
+                    </div>
+                    <div class="text-right">
+                      <p class="font-bold text-pink-500 text-lg">Rp 6K</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="package-option rounded-xl border-2 border-pink-200 p-3 relative" data-product="CapCut Premium" data-package="14 Hari" data-price="11000" data-is-capcut="true">
+                  <div class="discount-badge absolute -top-2 -right-2 text-white text-xs px-2 py-1 rounded-full font-bold">PROMO</div>
+                  <div class="flex justify-between items-center">
+                    <div>
+                      <p class="font-semibold text-gray-700">14 Hari</p>
+                      <p class="text-xs text-gray-500 mt-1">🔒 Privat (Bukan Sharing)</p>
+                    </div>
+                    <div class="text-right">
+                      <span class="text-gray-400 text-sm strikethrough">Rp 12K</span>
+                      <p class="font-bold text-pink-500 text-lg">Rp 11K</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="package-option rounded-xl border-2 border-pink-200 p-3 relative" data-product="CapCut Premium" data-package="1 Bulan" data-price="20000" data-is-capcut="true">
+                  <div class="discount-badge absolute -top-2 -right-2 text-white text-xs px-2 py-1 rounded-full font-bold">BEST</div>
+                  <div class="flex justify-between items-center">
+                    <div>
+                      <p class="font-semibold text-gray-700">1 Bulan</p>
+                      <p class="text-xs text-gray-500 mt-1">🔒 Privat (Bukan Sharing)</p>
+                    </div>
+                    <div class="text-right">
+                      <span class="text-gray-400 text-sm strikethrough">Rp 25K</span>
+                      <p class="font-bold text-pink-500 text-lg">Rp 20K</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="product-card card-texture rounded-3xl shadow-xl shadow-pink-200/50 overflow-hidden border border-pink-100">
+              <div class="relative">
+                <div class="absolute top-3 right-3 z-20">
+                  <div class="info-tooltip">
+                    <button class="text-pink-500 hover:bg-pink-100 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold border-2 border-pink-300 bg-white">i</button>
+                    <span class="tooltip-text">GPT-5 Turbo, Thinking mode, priority support</span>
+                  </div>
+                </div>
+                <div class="price-tag text-white text-center py-3 flex items-center justify-center gap-2 pr-8">
+                  <span class="text-2xl">🤖</span>
+                  <h2 class="font-bold text-lg">ChatGPT Pro</h2>
+                </div>
+              </div>
+              <div class="px-5 pt-3 pb-1">
+                <p class="text-xs text-center text-gray-500 bg-pink-50 rounded-lg py-1">Include: GPT Instan, Thinking, Pro</p>
+              </div>
+              <div class="p-5 pt-3 space-y-3">
+                <div class="package-option rounded-xl border-2 border-pink-200 p-3 relative" data-product="ChatGPT Pro" data-package="15 Hari" data-price="10000" data-needs-email="true">
+                  <div class="discount-badge absolute -top-2 -right-2 text-white text-xs px-2 py-1 rounded-full font-bold">PROMO</div>
+                  <div class="flex justify-between items-center">
+                    <div>
+                      <p class="font-semibold text-gray-700">15 Hari</p>
+                      <p class="text-xs text-gray-500 mt-1">👤 1 akun</p>
+                    </div>
+                    <div class="text-right">
+                      <span class="text-gray-400 text-sm strikethrough">Rp 15K</span>
+                      <p class="font-bold text-pink-500 text-lg">Rp 10K</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="package-option rounded-xl border-2 border-pink-200 p-3 relative" data-product="ChatGPT Pro" data-package="30 Hari" data-price="15000" data-needs-email="true">
+                  <div class="discount-badge absolute -top-2 -right-2 text-white text-xs px-2 py-1 rounded-full font-bold">BEST</div>
+                  <div class="flex justify-between items-center">
+                    <div>
+                      <p class="font-semibold text-gray-700">30 Hari</p>
+                      <p class="text-xs text-gray-500 mt-1">👤 1 akun</p>
+                    </div>
+                    <div class="text-right">
+                      <span class="text-gray-400 text-sm strikethrough">Rp 25K</span>
+                      <p class="font-bold text-pink-500 text-lg">Rp 15K</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-10">
+            <div class="card-texture rounded-3xl border border-pink-100 shadow-lg p-6">
+              <h2 class="text-2xl font-bold text-center text-pink-500 mb-6">❓ FAQ</h2>
+              <div class="space-y-3">
+                <div class="border border-pink-200 rounded-2xl overflow-hidden bg-white/70">
+                  <button class="faq-toggle w-full text-left px-5 py-4 font-semibold text-gray-700 flex justify-between items-center">
+                    <span>Apakah akun bergaransi?</span><span>＋</span>
+                  </button>
+                  <div class="faq-answer hidden px-5 pb-4 text-sm text-gray-600">
+                    Ya, semua pesanan mendapat garansi sesuai masa aktif paket. Jika akun bermasalah sebelum masa aktif berakhir, silakan hubungi admin.
+                  </div>
+                </div>
+
+                <div class="border border-pink-200 rounded-2xl overflow-hidden bg-white/70">
+                  <button class="faq-toggle w-full text-left px-5 py-4 font-semibold text-gray-700 flex justify-between items-center">
+                    <span>Berapa lama proses pesanan?</span><span>＋</span>
+                  </button>
+                  <div class="faq-answer hidden px-5 pb-4 text-sm text-gray-600">
+                    Pesanan biasanya diproses secepat mungkin setelah pembayaran dikonfirmasi.
+                  </div>
+                </div>
+
+                <div class="border border-pink-200 rounded-2xl overflow-hidden bg-white/70">
+                  <button class="faq-toggle w-full text-left px-5 py-4 font-semibold text-gray-700 flex justify-between items-center">
+                    <span>Apakah CapCut sharing?</span><span>＋</span>
+                  </button>
+                  <div class="faq-answer hidden px-5 pb-4 text-sm text-gray-600">
+                    Tidak. Paket CapCut yang tersedia di website ini bersifat privat, bukan sharing.
+                  </div>
+                </div>
+
+                <div class="border border-pink-200 rounded-2xl overflow-hidden bg-white/70">
+                  <button class="faq-toggle w-full text-left px-5 py-4 font-semibold text-gray-700 flex justify-between items-center">
+                    <span>Kalau email salah bagaimana?</span><span>＋</span>
+                  </button>
+                  <div class="faq-answer hidden px-5 pb-4 text-sm text-gray-600">
+                    Pastikan email benar sebelum checkout. Jika ada kesalahan, segera hubungi admin sebelum pesanan diproses.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="history-tab" class="tab-content hidden">
+          <div class="mt-6">
+            <div class="flex justify-end mb-4 gap-2">
+              <button id="sort-newest-btn" class="sort-btn active px-4 py-2 rounded-xl border border-pink-200 bg-white text-pink-500 font-semibold text-sm hover:bg-pink-50 transition">⬇️ Terbaru</button>
+              <button id="sort-oldest-btn" class="sort-btn px-4 py-2 rounded-xl border border-pink-200 bg-white text-pink-500 font-semibold text-sm hover:bg-pink-50 transition">⬆️ Terlama</button>
+            </div>
+            <div id="history-container" class="space-y-4">
+              <div class="text-center py-12">
+                <p class="text-gray-400 text-lg">📭 Belum ada pesanan</p>
+                <p class="text-gray-300 text-sm mt-2">Mulai pesan sekarang untuk melihat history!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="admin-tab" class="tab-content hidden">
+          <div class="mt-6">
+            <div id="admin-auth-box" class="card-texture rounded-3xl border border-pink-100 shadow-lg p-8 max-w-xl mx-auto">
+              <h2 class="text-2xl font-bold text-pink-500 text-center mb-2">🔐 Admin Login</h2>
+              <p class="text-center text-sm text-gray-500 mb-6">Login pakai akun admin Supabase</p>
+              <div class="space-y-4">
+                <input id="admin-email" type="email" placeholder="Email admin" class="w-full px-4 py-3 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none" />
+                <input id="admin-password" type="password" placeholder="Password admin" class="w-full px-4 py-3 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none" />
+                <button id="admin-login-btn" class="w-full px-4 py-3 rounded-xl bg-pink-500 text-white font-semibold hover:bg-pink-600 transition">Masuk Admin</button>
+              </div>
+            </div>
+
+            <div id="admin-panel" class="hidden space-y-4">
+              <div class="card-texture rounded-3xl border border-pink-100 shadow-lg p-5">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div>
+                    <h2 class="text-2xl font-bold text-pink-500">📊 Dashboard Admin</h2>
+                    <p class="text-sm text-gray-500 mt-1">Kelola pesanan buyer dengan cepat</p>
+                  </div>
+                  <div class="flex gap-2 flex-wrap">
+                    <button id="copy-all-emails-btn" class="px-4 py-2 rounded-xl border border-pink-200 bg-white text-pink-500 font-semibold text-sm hover:bg-pink-50 transition">📋 Copy Semua Email</button>
+                    <button id="admin-logout-btn" class="px-4 py-2 rounded-xl border border-pink-200 bg-white text-pink-500 font-semibold text-sm hover:bg-pink-50 transition">🚪 Logout</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid md:grid-cols-4 gap-4">
+                <div class="card-texture rounded-2xl border border-pink-100 shadow p-4">
+                  <p class="text-sm text-gray-500">Total Order</p>
+                  <p id="admin-total-orders" class="text-2xl font-bold text-pink-500">0</p>
+                </div>
+                <div class="card-texture rounded-2xl border border-pink-100 shadow p-4">
+                  <p class="text-sm text-gray-500">Pending</p>
+                  <p id="admin-pending-orders" class="text-2xl font-bold text-yellow-500">0</p>
+                </div>
+                <div class="card-texture rounded-2xl border border-pink-100 shadow p-4">
+                  <p class="text-sm text-gray-500">Processing</p>
+                  <p id="admin-processing-orders" class="text-2xl font-bold text-blue-500">0</p>
+                </div>
+                <div class="card-texture rounded-2xl border border-pink-100 shadow p-4">
+                  <p class="text-sm text-gray-500">Completed</p>
+                  <p id="admin-completed-orders" class="text-2xl font-bold text-green-500">0</p>
+                </div>
+              </div>
+
+              <div class="card-texture rounded-3xl border border-pink-100 shadow-lg p-5">
+                <div class="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">Filter Produk</label>
+                    <select id="admin-filter-product" class="w-full px-4 py-3 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none">
+                      <option value="">Semua Produk</option>
+                      <option value="Canva Premium">Canva Premium</option>
+                      <option value="CapCut Premium">CapCut Premium</option>
+                      <option value="ChatGPT Pro">ChatGPT Pro</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">Filter Status</label>
+                    <select id="admin-filter-status" class="w-full px-4 py-3 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none">
+                      <option value="">Semua Status</option>
+                      <option value="pending">Pending</option>
+                      <option value="processing">Processing</option>
+                      <option value="completed">Completed</option>
+                      <option value="expired">Expired</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div id="admin-orders-container" class="space-y-4"></div>
+            </div>
+          </div>
+        </div>
+
+        <footer class="mt-10 text-center">
+          <p class="text-gray-400 text-sm">💕 Terima kasih telah berbelanja di MYCLIPS 💕</p>
+          <p class="text-gray-400 text-xs mt-1">Fast response via WhatsApp</p>
+        </footer>
+      </div>
+    </main>
+
+    <div id="email-modal" class="fixed inset-0 z-50 hidden">
+      <div class="modal-overlay absolute inset-0" onclick="closeModal()"></div>
+      <div class="absolute inset-0 flex items-center justify-center p-4">
+        <div class="card-texture rounded-3xl shadow-2xl w-full max-w-md p-6 relative z-10 border border-pink-100 max-h-[90vh] overflow-y-auto">
+          <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl">✕</button>
+          <div class="text-center mb-5">
+            <span class="text-4xl" id="modal-icon">🎨</span>
+            <h3 class="font-bold text-xl text-gray-700 mt-2" id="modal-title">Canva Premium</h3>
+            <p class="text-pink-500 font-semibold" id="modal-package">1 Bulan - Rp 3K</p>
+          </div>
+
+          <div class="space-y-4">
+            <div id="capcut-quantity-section" class="hidden space-y-3">
+              <div id="capcut-qty-container"></div>
+              <p id="capcut-total" class="text-pink-500 font-bold text-sm text-center">Total: <span id="capcut-total-price">Rp 0</span></p>
+            </div>
+
+            <div id="single-email-section">
+              <label class="block text-gray-600 text-sm font-medium mb-2">Alamat Email</label>
+              <div id="single-emails-container" class="space-y-2">
+                <div class="flex gap-2 items-center">
+                  <input type="email" class="flex-1 px-4 py-3 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none transition-colors single-email-input" placeholder="contoh@gmail.com" oninput="validateSingleEmails()">
+                  <button type="button" onclick="removeSingleEmailInput(this)" class="text-pink-400 hover:text-pink-600 text-lg font-bold hidden">✕</button>
+                </div>
+              </div>
+              <button type="button" onclick="addSingleEmailInput()" class="text-xs text-pink-500 hover:text-pink-600 font-medium mt-2">+ Tambah Email</button>
+              <p id="single-email-error" class="text-red-500 text-xs mt-2 hidden"></p>
+              <p id="single-email-success" class="text-green-500 text-xs mt-2 hidden"></p>
+              <p id="price-total" class="text-pink-500 font-bold text-sm mt-3 text-center hidden">Total: <span id="total-price">Rp 3K</span></p>
+            </div>
+
+            <div id="group-email-section" class="hidden">
+              <label class="block text-gray-600 text-sm font-medium mb-3">Email Akun (Masukkan hingga 15 email)</label>
+              <div id="group-emails-container" class="space-y-2 max-h-48 overflow-y-auto pb-2"></div>
+              <button type="button" onclick="addGroupEmailInput()" class="text-xs text-pink-500 hover:text-pink-600 font-medium mt-2">+ Tambah Email</button>
+              <p id="group-email-error" class="text-red-500 text-xs mt-2 hidden"></p>
+              <p id="group-email-success" class="text-green-500 text-xs mt-2 hidden"></p>
+            </div>
+
+            <button id="checkout-btn" onclick="processCheckout()" class="w-full btn-checkout text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none" disabled>
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"></path>
+              </svg>
+              Checkout via WhatsApp
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="info-modal" class="fixed inset-0 z-50 hidden">
+      <div class="modal-overlay absolute inset-0" onclick="closeInfoModal()"></div>
+      <div class="absolute inset-0 flex items-center justify-center p-4">
+        <div class="card-texture rounded-3xl shadow-2xl w-full max-w-md p-6 relative z-10 border border-pink-100">
+          <button onclick="closeInfoModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl">✕</button>
+          <div class="text-center mb-5">
+            <span class="text-4xl" id="info-modal-icon">🎨</span>
+            <h3 class="font-bold text-xl text-gray-700 mt-3" id="info-modal-title">Canva Premium</h3>
+          </div>
+          <div id="info-modal-content" class="space-y-3 text-gray-600 text-sm"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://xogqczxmdytxopoenyah.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_UUX7I9H91_Il6VfjWQJlzQ_ZlSRiLhc';
+
+    const supabase = (SUPABASE_URL && SUPABASE_ANON_KEY && SUPABASE_URL !== 'PASTE_SUPABASE_URL_HERE')
+      ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+      : null;
+
+    const defaultConfig = {
+      store_title: 'MYCLIPS',
+      store_tagline: '✨ Premium Apps Store ✨',
+      whatsapp_number: '85707486749'
+    };
+
+    const productInfo = {
+      'Canva Premium': {
+        icon: '🎨',
+        features: ['Edit desain unlimited', 'Template premium', 'Kolaborasi tim', 'Brand kit management', 'Resize designs dengan mudah'],
+        notes: [
+          '✓ Cek pesanan anda sudah benar sebelum order',
+          '✓ Pastikan email yang ditulis sudah benar',
+          '✓ Aktif 28-30 hari setelah konfirmasi seller & buyer',
+          '✓ Jika habis masa pro sebelum tenggat, konfirmasi ke admin',
+          '✓ Sertakan screenshot transfer saat order di WhatsApp'
+        ]
+      },
+      'CapCut Premium': {
+        icon: '🎬',
+        features: ['Edit video tanpa watermark', 'Effect dan filter premium', 'Export video 4K', 'Template video profesional', 'Music library lengkap'],
+        notes: [
+          '✓ Anda akan diberikan akun + password CapCut',
+          '✓ Dilarang mengganti password akun CapCut',
+          '✓ Jika akun tidak pro sebelum tenggat, konfirmasi admin',
+          '✓ Login via EMAIL (bukan Gmail) di HP, gunakan QR untuk laptop',
+          '✓ Jika kesulitan login, tanyakan pada admin'
+        ]
+      },
+      'ChatGPT Pro': {
+        icon: '🤖',
+        features: ['GPT-4 Turbo akses unlimited', 'Mode Thinking advanced', 'Priority customer support', 'Plugin marketplace', 'Upload file hingga 100MB'],
+        notes: [
+          '✓ Tulis alamat email anda untuk undangan workspace',
+          '✓ Pastikan email yang ditulis sudah benar',
+          '✓ Anda akan diundang masuk ke Workspace/Tim',
+          '✓ Aktif setelah konfirmasi undangan seller & buyer',
+          '✓ Chat bersifat privat, tidak bisa dishare ke akun lain',
+          '✓ Sertakan screenshot transfer saat order di WhatsApp'
+        ]
+      }
+    };
+
+    let selectedProduct = null;
+    let selectedPackage = null;
+    let selectedPrice = null;
+    let isCapCut = false;
+    let capCutQuantities = {};
+    let allOrders = [];
+    let historySortOrder = 'newest';
+    let buyerSessionId = null;
+    let countdownInterval = null;
+    let adminSession = null;
+
+    function initializeBuyerSession() {
+      let existing = localStorage.getItem('myclips_buyer_session_id');
+      if (!existing) {
+        existing = 'buyer_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+        localStorage.setItem('myclips_buyer_session_id', existing);
+      }
+      buyerSessionId = existing;
+    }
+
+    function getDurationInMs(packageName, productName) {
+      if (productName === 'Canva Premium') {
+        if (packageName === '1 Bulan') return 30 * 24 * 60 * 60 * 1000;
+        if (packageName === '3 Bulan') return 90 * 24 * 60 * 60 * 1000;
+        if (packageName === 'Paket Grup (15 akun)/Bulan') return 30 * 24 * 60 * 60 * 1000;
+      }
+      if (productName === 'CapCut Premium') {
+        if (packageName === '7 Hari') return 7 * 24 * 60 * 60 * 1000;
+        if (packageName === '14 Hari') return 14 * 24 * 60 * 60 * 1000;
+        if (packageName === '1 Bulan') return 30 * 24 * 60 * 60 * 1000;
+      }
+      if (productName === 'ChatGPT Pro') {
+        if (packageName === '15 Hari') return 15 * 24 * 60 * 60 * 1000;
+        if (packageName === '30 Hari') return 30 * 24 * 60 * 60 * 1000;
+      }
+      return 24 * 60 * 60 * 1000;
+    }
+
+    function formatCountdownTime(ms) {
+      if (ms <= 0) return "0m 0s";
+      const days = Math.floor(ms / (24 * 60 * 60 * 1000));
+      const hours = Math.floor((ms % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+      const minutes = Math.floor((ms % (60 * 60 * 1000)) / (60 * 1000));
+      const seconds = Math.floor((ms % (60 * 1000)) / 1000);
+
+      if (days > 0) return `${days}h ${hours}j`;
+      if (hours > 0) return `${hours}j ${minutes}m`;
+      if (minutes > 0) return `${minutes}m ${seconds}s`;
+      return `${seconds}s`;
+    }
+
+    function getStatusBadgeClass(status) {
+      if (status === 'completed') return 'status-completed';
+      if (status === 'processing') return 'status-processing';
+      if (status === 'expired') return 'status-expired';
+      return 'status-pending';
+    }
+
+    function getStatusText(status) {
+      if (status === 'completed') return '✓ Selesai';
+      if (status === 'processing') return '🔄 Diproses';
+      if (status === 'expired') return '⌛ Expired';
+      return '⏳ Pending';
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `toast px-4 py-3 rounded-xl shadow-lg ${type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-pink-500'} text-white font-medium text-sm`;
+      toast.textContent = message;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.animation = 'slideIn 0.3s ease reverse';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    function openInfoModal(productName) {
+      const modal = document.getElementById('info-modal');
+      const info = productInfo[productName];
+      if (!info) return;
+
+      document.getElementById('info-modal-icon').textContent = info.icon;
+      document.getElementById('info-modal-title').textContent = productName;
+
+      let html = `
+        <div class="bg-pink-50 rounded-xl p-4 space-y-2">
+          <h4 class="font-bold text-gray-700">✨ Fitur Utama:</h4>
+          <ul class="space-y-1 ml-2 text-sm">
+            ${info.features.map(feature => `<li>✓ ${feature}</li>`).join('')}
+          </ul>
+        </div>
+      `;
+
+      if (info.notes?.length) {
+        html += `
+          <div class="bg-blue-50 rounded-xl p-4 space-y-2 border-l-4 border-blue-400">
+            <h4 class="font-bold text-gray-700">📝 Penting - Baca Dulu:</h4>
+            <ul class="space-y-1 ml-2 text-xs text-gray-700">
+              ${info.notes.map(note => `<li>${note}</li>`).join('')}
+            </ul>
+          </div>
+        `;
+      }
+
+      document.getElementById('info-modal-content').innerHTML = html;
+      modal.classList.remove('hidden');
+    }
+
+    function closeInfoModal() {
+      document.getElementById('info-modal').classList.add('hidden');
+    }
+
+    function openModal() {
+      const modal = document.getElementById('email-modal');
+      const icon = document.getElementById('modal-icon');
+      const title = document.getElementById('modal-title');
+      const packageInfo = document.getElementById('modal-package');
+      const singleEmailSection = document.getElementById('single-email-section');
+      const groupEmailSection = document.getElementById('group-email-section');
+      const capCutSection = document.getElementById('capcut-quantity-section');
+
+      if (selectedProduct.includes('Canva')) icon.textContent = '🎨';
+      else if (selectedProduct.includes('CapCut')) icon.textContent = '🎬';
+      else icon.textContent = '🤖';
+
+      title.textContent = selectedProduct;
+      packageInfo.textContent = `${selectedPackage} - Rp ${(parseInt(selectedPrice, 10) / 1000)}K`;
+
+      if (isCapCut) {
+        singleEmailSection.classList.add('hidden');
+        groupEmailSection.classList.add('hidden');
+        capCutSection.classList.remove('hidden');
+        initializeCapCutQuantity();
+      } else {
+        capCutSection.classList.add('hidden');
+        const isGroupPackage = selectedPackage.includes('Paket Grup');
+
+        if (isGroupPackage) {
+          singleEmailSection.classList.add('hidden');
+          groupEmailSection.classList.remove('hidden');
+          initializeGroupEmails();
+        } else {
+          singleEmailSection.classList.remove('hidden');
+          groupEmailSection.classList.add('hidden');
+          initializeSingleEmails();
+        }
+      }
+
+      document.getElementById('checkout-btn').disabled = true;
+      modal.classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('email-modal').classList.add('hidden');
+      document.querySelectorAll('.package-option').forEach(p => p.classList.remove('selected'));
+    }
+
+    function initializeCapCutQuantity() {
+      const container = document.getElementById('capcut-qty-container');
+      container.innerHTML = '';
+      capCutQuantities = {};
+
+      const packages = [
+        { name: '7 Hari', price: 6000 },
+        { name: '14 Hari', price: 11000 },
+        { name: '1 Bulan', price: 20000 }
+      ];
+
+      packages.forEach(pkg => {
+        capCutQuantities[pkg.name] = 0;
+        const wrapper = document.createElement('div');
+        wrapper.className = 'flex justify-between items-center gap-2 p-3 rounded-xl border-2 border-pink-200 bg-pink-50';
+        wrapper.innerHTML = `
+          <div class="flex-1">
+            <p class="font-semibold text-gray-700 text-sm">${pkg.name}</p>
+            <p class="text-pink-500 font-bold text-xs">Rp ${pkg.price.toLocaleString('id-ID')}</p>
+          </div>
+          <div class="flex items-center gap-1 bg-white rounded-lg px-2 py-1 border border-pink-200">
+            <button type="button" onclick="decreaseCapCutQty('${pkg.name}')" class="text-pink-500 hover:text-pink-600 font-bold text-sm w-5">−</button>
+            <input type="number" class="capcut-qty-input w-8 text-center border-0 bg-transparent font-bold text-gray-700 text-sm" data-package="${pkg.name}" value="0" min="0" max="99" readonly>
+            <button type="button" onclick="increaseCapCutQty('${pkg.name}')" class="text-pink-500 hover:text-pink-600 font-bold text-sm w-5">+</button>
+          </div>
+        `;
+        container.appendChild(wrapper);
+      });
+    }
+
+    function increaseCapCutQty(pkgName) {
+      if (capCutQuantities[pkgName] < 99) {
+        capCutQuantities[pkgName]++;
+        updateCapCutDisplay(pkgName);
+      }
+    }
+
+    function decreaseCapCutQty(pkgName) {
+      if (capCutQuantities[pkgName] > 0) {
+        capCutQuantities[pkgName]--;
+        updateCapCutDisplay(pkgName);
+      }
+    }
+
+    function updateCapCutDisplay(pkgName) {
+      document.querySelectorAll('.capcut-qty-input').forEach(input => {
+        if (input.dataset.package === pkgName) input.value = capCutQuantities[pkgName];
+      });
+      updateCapCutTotal();
+    }
+
+    function updateCapCutTotal() {
+      const priceMap = { '7 Hari': 6000, '14 Hari': 11000, '1 Bulan': 20000 };
+      let total = 0;
+      let totalQty = 0;
+
+      Object.entries(capCutQuantities).forEach(([pkg, qty]) => {
+        total += (priceMap[pkg] || 0) * qty;
+        totalQty += qty;
+      });
+
+      document.getElementById('capcut-total-price').textContent = `Rp ${total.toLocaleString('id-ID')}`;
+      document.getElementById('checkout-btn').disabled = totalQty === 0;
+    }
+
+    function initializeSingleEmails() {
+      const container = document.getElementById('single-emails-container');
+      container.innerHTML = '';
+
+      const inputWrapper = document.createElement('div');
+      inputWrapper.className = 'flex gap-2 items-center';
+      inputWrapper.innerHTML = `
+        <input type="email" class="flex-1 px-4 py-3 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none transition-colors single-email-input" placeholder="contoh@gmail.com" oninput="validateSingleEmails()">
+        <button type="button" onclick="removeSingleEmailInput(this)" class="text-pink-400 hover:text-pink-600 font-bold text-lg hidden">✕</button>
+      `;
+      container.appendChild(inputWrapper);
+
+      document.getElementById('price-total').classList.add('hidden');
+      document.getElementById('single-email-error').classList.add('hidden');
+      document.getElementById('single-email-success').classList.add('hidden');
+    }
+
+    function addSingleEmailInput() {
+      const container = document.getElementById('single-emails-container');
+      const currentInputs = container.querySelectorAll('.single-email-input');
+
+      currentInputs.forEach(input => {
+        const deleteBtn = input.parentElement.querySelector('button');
+        if (deleteBtn) deleteBtn.classList.remove('hidden');
+      });
+
+      const inputWrapper = document.createElement('div');
+      inputWrapper.className = 'flex gap-2 items-center';
+      inputWrapper.innerHTML = `
+        <input type="email" class="flex-1 px-4 py-3 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none transition-colors single-email-input" placeholder="contoh@gmail.com" oninput="validateSingleEmails()">
+        <button type="button" onclick="removeSingleEmailInput(this)" class="text-pink-400 hover:text-pink-600 text-lg font-bold">✕</button>
+      `;
+      container.appendChild(inputWrapper);
+      validateSingleEmails();
+    }
+
+    function removeSingleEmailInput(button) {
+      const container = document.getElementById('single-emails-container');
+      const inputs = container.querySelectorAll('.flex');
+
+      if (inputs.length > 1) {
+        button.parentElement.remove();
+
+        const remainingInputs = container.querySelectorAll('.single-email-input');
+        if (remainingInputs.length === 1) {
+          const deleteBtn = remainingInputs[0].parentElement.querySelector('button');
+          if (deleteBtn) deleteBtn.classList.add('hidden');
+        }
+
+        validateSingleEmails();
+      }
+    }
+
+    function validateSingleEmails() {
+      const inputs = document.querySelectorAll('.single-email-input');
+      const errorEl = document.getElementById('single-email-error');
+      const successEl = document.getElementById('single-email-success');
+      const priceEl = document.getElementById('price-total');
+      const checkoutBtn = document.getElementById('checkout-btn');
+
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      const emails = Array.from(inputs).map(input => input.value.trim()).filter(email => email !== '');
+
+      if (emails.length === 0) {
+        errorEl.classList.add('hidden');
+        successEl.classList.add('hidden');
+        priceEl.classList.add('hidden');
+        checkoutBtn.disabled = true;
+        return;
+      }
+
+      const allValid = emails.every(email => emailRegex.test(email));
+
+      if (allValid && emails.length >= 1) {
+        errorEl.classList.add('hidden');
+        successEl.textContent = `✅ ${emails.length} email valid!`;
+        successEl.classList.remove('hidden');
+
+        const totalPrice = parseInt(selectedPrice, 10) * emails.length;
+        priceEl.querySelector('#total-price').textContent = `Rp ${totalPrice.toLocaleString('id-ID')}`;
+        priceEl.classList.remove('hidden');
+
+        checkoutBtn.disabled = false;
+      } else {
+        successEl.classList.add('hidden');
+        priceEl.classList.add('hidden');
+        if (emails.length > 0) {
+          const invalidCount = emails.filter(email => !emailRegex.test(email)).length;
+          errorEl.innerHTML = `⚠️ ${invalidCount} email format tidak valid!<br><span style="font-size: 0.7rem; opacity: 0.9; margin-top: 0.25rem; display: block;">(contoh: alamatemail@gmail.com / alamatemail@yahoo.com)</span>`;
+          errorEl.classList.remove('hidden');
+        }
+        checkoutBtn.disabled = true;
+      }
+    }
+
+    function initializeGroupEmails() {
+      const container = document.getElementById('group-emails-container');
+      container.innerHTML = '';
+
+      for (let i = 0; i < 15; i++) {
+        const inputWrapper = document.createElement('div');
+        inputWrapper.className = 'flex gap-2 items-center';
+        inputWrapper.innerHTML = `
+          <input type="email" placeholder="Email ${i + 1}" class="flex-1 px-3 py-2 rounded-lg border-2 border-pink-200 focus:border-pink-400 focus:outline-none transition-colors text-sm group-email-input" data-index="${i}" oninput="validateGroupEmails()">
+          <button type="button" onclick="removeGroupEmailInput(this)" class="text-pink-400 hover:text-pink-600 text-lg">✕</button>
+        `;
+        container.appendChild(inputWrapper);
+      }
+    }
+
+    function addGroupEmailInput() {
+      const container = document.getElementById('group-emails-container');
+      const currentCount = container.querySelectorAll('.group-email-input').length;
+
+      if (currentCount >= 15) {
+        showToast('Maksimal 15 email', 'error');
+        return;
+      }
+
+      const inputWrapper = document.createElement('div');
+      inputWrapper.className = 'flex gap-2 items-center';
+      inputWrapper.innerHTML = `
+        <input type="email" placeholder="Email ${currentCount + 1}" class="flex-1 px-3 py-2 rounded-lg border-2 border-pink-200 focus:border-pink-400 focus:outline-none transition-colors text-sm group-email-input" data-index="${currentCount}" oninput="validateGroupEmails()">
+        <button type="button" onclick="removeGroupEmailInput(this)" class="text-pink-400 hover:text-pink-600 text-lg">✕</button>
+      `;
+      container.appendChild(inputWrapper);
+      validateGroupEmails();
+    }
+
+    function removeGroupEmailInput(button) {
+      button.parentElement.remove();
+      validateGroupEmails();
+    }
+
+    function validateGroupEmails() {
+      const inputs = document.querySelectorAll('.group-email-input');
+      const errorEl = document.getElementById('group-email-error');
+      const successEl = document.getElementById('group-email-success');
+      const checkoutBtn = document.getElementById('checkout-btn');
+
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      const emails = Array.from(inputs).map(input => input.value.trim()).filter(email => email !== '');
+
+      if (emails.length === 0) {
+        errorEl.classList.add('hidden');
+        successEl.classList.add('hidden');
+        checkoutBtn.disabled = true;
+        return;
+      }
+
+      const allValid = emails.every(email => emailRegex.test(email));
+
+      if (allValid && emails.length >= 1) {
+        errorEl.classList.add('hidden');
+        successEl.textContent = `✅ ${emails.length} email valid!`;
+        successEl.classList.remove('hidden');
+        checkoutBtn.disabled = false;
+      } else {
+        successEl.classList.add('hidden');
+        if (emails.length > 0) {
+          const invalidCount = emails.filter(email => !emailRegex.test(email)).length;
+          errorEl.textContent = `⚠️ ${invalidCount} email format tidak valid! (contoh: alamatemail@gmail.com)`;
+          errorEl.classList.remove('hidden');
+        }
+        checkoutBtn.disabled = true;
+      }
+    }
+
+    function getExpiresAtISO(orderDateISO, packageName, productName) {
+      const duration = getDurationInMs(packageName, productName);
+      return new Date(new Date(orderDateISO).getTime() + duration).toISOString();
+    }
+
+    async function insertOrder(orderData) {
+      if (!supabase) throw new Error('Supabase belum dikonfigurasi');
+
+      const { data, error } = await supabase
+        .from('orders')
+        .insert(orderData)
+        .select();
+
+      if (error) throw error;
+      return data?.[0];
+    }
+
+    async function loadBuyerOrders() {
+      if (!supabase) {
+        allOrders = [];
+        updateHistoryDisplay();
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('buyer_session_id', buyerSessionId);
+
+      if (error) {
+        console.error(error);
+        showToast('Gagal memuat order buyer', 'error');
+        return;
+      }
+
+      allOrders = data || [];
+      updateHistoryDisplay();
+    }
+
+    async function processCheckout() {
+      if (!supabase) {
+        showToast('Isi SUPABASE_URL dan SUPABASE_ANON_KEY dulu', 'error');
+        return;
+      }
+
+      const waNumber = defaultConfig.whatsapp_number;
+      let message;
+
+      try {
+        if (isCapCut) {
+          const priceMap = { '7 Hari': 6000, '14 Hari': 11000, '1 Bulan': 20000 };
+          const packagesOrdered = [];
+
+          message = '*Halo MYCLIPS!*\nSaya ingin memesan:\n━━━━━━━━━━━━━━━━━━\n';
+          let totalPrice = 0;
+
+          Object.entries(capCutQuantities).forEach(([pkg, qty]) => {
+            if (qty > 0) {
+              const price = priceMap[pkg];
+              const subtotal = price * qty;
+              message += `*CapCut Premium - ${pkg}*\n*Jumlah:* ${qty}\n*Harga Satuan:* Rp ${price.toLocaleString('id-ID')}\n`;
+              totalPrice += subtotal;
+              packagesOrdered.push({ pkg, qty, price, subtotal });
+            }
+          });
+
+          message += `━━━━━━━━━━━━━━━━━━\n*Total Harga:* Rp ${totalPrice.toLocaleString('id-ID')}\n━━━━━━━━━━━━━━━━━━\nMohon diproses ya, terima kasih!`;
+
+          for (const item of packagesOrdered) {
+            const nowIso = new Date().toISOString();
+            const row = await insertOrder({
+              product_name: selectedProduct,
+              package: item.pkg,
+              email: 'CapCut Order',
+              quantity: item.qty,
+              price: item.price,
+              total_price: item.subtotal,
+              status: 'pending',
+              buyer_session_id: buyerSessionId,
+              expires_at: getExpiresAtISO(nowIso, item.pkg, selectedProduct)
+            });
+            if (row) allOrders.push(row);
+          }
+
+          updateHistoryDisplay();
+          showToast('Pesanan berhasil disimpan! 📝', 'success');
+        } else {
+          const isGroupPackage = selectedPackage.includes('Paket Grup');
+          let orderData;
+
+          if (isGroupPackage) {
+            const emails = Array.from(document.querySelectorAll('.group-email-input'))
+              .map(input => input.value.trim())
+              .filter(email => email !== '')
+              .join(', ');
+
+            message = `*Halo MYCLIPS!*\nSaya ingin memesan:\n━━━━━━━━━━━━━━━━━━\n*Produk:* ${selectedProduct}\n*Paket:* ${selectedPackage}\n*Email:* \n${emails}\n━━━━━━━━━━━━━━━━━━\n*Total Harga:* Rp ${parseInt(selectedPrice, 10).toLocaleString('id-ID')}\n━━━━━━━━━━━━━━━━━━\nMohon diproses ya, terima kasih!`;
+
+            const nowIso = new Date().toISOString();
+            orderData = {
+              product_name: selectedProduct,
+              package: selectedPackage,
+              email: emails,
+              quantity: emails.split(',').length,
+              price: parseInt(selectedPrice, 10),
+              total_price: parseInt(selectedPrice, 10),
+              status: 'pending',
+              buyer_session_id: buyerSessionId,
+              expires_at: getExpiresAtISO(nowIso, selectedPackage, selectedProduct)
+            };
+          } else {
+            const emails = Array.from(document.querySelectorAll('.single-email-input'))
+              .map(input => input.value.trim())
+              .filter(email => email !== '')
+              .join(', ');
+
+            const emailCount = emails.split(',').length;
+            const totalPrice = parseInt(selectedPrice, 10) * emailCount;
+
+            message = `*Halo MYCLIPS!*\nSaya ingin memesan:\n━━━━━━━━━━━━━━━━━━\n*Produk:* ${selectedProduct}\n*Paket:* ${selectedPackage}\n*Jumlah:* ${emailCount} akun\n*Harga Satuan:* Rp ${parseInt(selectedPrice, 10).toLocaleString('id-ID')}\n*Email:* ${emails}\n━━━━━━━━━━━━━━━━━━\n*Total Harga:* Rp ${totalPrice.toLocaleString('id-ID')}\n━━━━━━━━━━━━━━━━━━\nMohon diproses ya, terima kasih!`;
+
+            const nowIso = new Date().toISOString();
+            orderData = {
+              product_name: selectedProduct,
+              package: selectedPackage,
+              email: emails,
+              quantity: emailCount,
+              price: parseInt(selectedPrice, 10),
+              total_price: totalPrice,
+              status: 'pending',
+              buyer_session_id: buyerSessionId,
+              expires_at: getExpiresAtISO(nowIso, selectedPackage, selectedProduct)
+            };
+          }
+
+          const row = await insertOrder(orderData);
+          if (row) {
+            allOrders.push(row);
+            updateHistoryDisplay();
+          }
+          showToast('Pesanan berhasil disimpan! 📝', 'success');
+        }
+
+        const encodedMessage = encodeURIComponent(message);
+        const waUrl = `https://wa.me/62${waNumber}?text=${encodedMessage}`;
+        window.open(waUrl, '_blank');
+        closeModal();
+        showToast('Mengarahkan ke WhatsApp... 📱', 'success');
+      } catch (err) {
+        console.error(err);
+        showToast('Gagal menyimpan order ke database', 'error');
+      }
+    }
+
+    function updateSortButtons() {
+      document.getElementById('sort-newest-btn')?.classList.toggle('active', historySortOrder === 'newest');
+      document.getElementById('sort-oldest-btn')?.classList.toggle('active', historySortOrder === 'oldest');
+    }
+
+    function updateHistoryDisplay() {
+      const container = document.getElementById('history-container');
+      updateSortButtons();
+
+      if (!allOrders.length) {
+        container.innerHTML = `
+          <div class="text-center py-12">
+            <p class="text-gray-400 text-lg">📭 Belum ada pesanan</p>
+            <p class="text-gray-300 text-sm mt-2">Mulai pesan sekarang untuk melihat history!</p>
+          </div>
+        `;
+        return;
+      }
+
+      const sortedOrders = [...allOrders].sort((a, b) => {
+        if (historySortOrder === 'oldest') return new Date(a.created_at || a.order_date) - new Date(b.created_at || b.order_date);
+        return new Date(b.created_at || b.order_date) - new Date(a.created_at || a.order_date);
+      });
+
+      container.innerHTML = sortedOrders.map(order => {
+        const orderDate = new Date(order.created_at || order.order_date);
+        const formattedDate = orderDate.toLocaleDateString('id-ID', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+
+        const orderKey = order.id;
+
+        let timerHtml = '';
+        if (order.status === 'pending') {
+          timerHtml = `<p class="text-xs text-blue-500 font-semibold mt-1">⏰ Otomatis selesai dalam: <span data-order-key="${orderKey}" class="timer-complete">--</span></p>`;
+        }
+
+        const deleteCountdownHtml = `<p class="text-xs text-rose-500 font-semibold mt-1">🗑️ History dihapus dalam: <span data-order-key="${orderKey}" class="timer-delete">--</span></p>`;
+
+        return `
+          <div class="order-item card-texture rounded-xl p-5 border border-pink-100 shadow-md hover:shadow-lg transition-shadow">
+            <div class="flex justify-between items-start gap-4">
+              <div class="flex-1">
+                <div class="flex items-center gap-3 mb-2">
+                  <h3 class="font-bold text-lg text-gray-800">${order.product_name}</h3>
+                  <span class="status-badge ${getStatusBadgeClass(order.status)}">${getStatusText(order.status)}</span>
+                </div>
+                <div class="space-y-1 text-sm text-gray-600">
+                  <p><span class="font-semibold">Paket:</span> ${order.package}</p>
+                  <p><span class="font-semibold">Email:</span> ${order.email}</p>
+                  <p><span class="font-semibold">Qty:</span> ${order.quantity}</p>
+                  <p class="text-xs text-gray-400">📅 ${formattedDate}</p>
+                  ${timerHtml}
+                  ${deleteCountdownHtml}
+                </div>
+              </div>
+              <div class="text-right">
+                <p class="text-2xl font-bold text-pink-500">Rp ${parseInt(order.total_price, 10).toLocaleString('id-ID')}</p>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      updateTimerDisplays();
+      if (adminSession) updateAdminDisplay();
+    }
+
+    async function checkOrderTimers() {
+      if (!supabase || !allOrders.length) return;
+
+      const now = Date.now();
+
+      for (const order of [...allOrders]) {
+        const createdAt = new Date(order.created_at || order.order_date).getTime();
+        const sixHoursMs = 6 * 60 * 60 * 1000;
+
+        if (order.status === 'pending' && now - createdAt >= sixHoursMs) {
+          const { data, error } = await supabase
+            .from('orders')
+            .update({ status: 'completed' })
+            .eq('id', order.id)
+            .select();
+
+          if (!error && data?.[0]) {
+            const idx = allOrders.findIndex(o => o.id === order.id);
+            if (idx !== -1) allOrders[idx] = data[0];
+          }
+        }
+
+        const expireAt = new Date(order.expires_at).getTime();
+        if (!isNaN(expireAt) && now >= expireAt) {
+          const { error } = await supabase.from('orders').delete().eq('id', order.id);
+          if (!error) {
+            allOrders = allOrders.filter(o => o.id !== order.id);
+          }
+        }
+      }
+
+      updateHistoryDisplay();
+    }
+
+    function updateTimerDisplays() {
+      allOrders.forEach(order => {
+        const orderDate = new Date(order.created_at || order.order_date);
+        const now = new Date();
+        const orderKey = order.id;
+
+        if (order.status === 'pending') {
+          const timeElapsed = now - orderDate;
+          const sixHoursMs = 6 * 60 * 60 * 1000;
+          const remainingMs = sixHoursMs - timeElapsed;
+
+          const timerElement = document.querySelector(`[data-order-key="${orderKey}"].timer-complete`);
+          if (timerElement) {
+            if (remainingMs > 0) {
+              const remainingHours = Math.floor(remainingMs / (60 * 60 * 1000));
+              const remainingMinutes = Math.floor((remainingMs % (60 * 60 * 1000)) / (60 * 1000));
+              timerElement.textContent = `${remainingHours}j ${remainingMinutes}m`;
+            } else {
+              timerElement.textContent = '0j 0m';
+            }
+          }
+        }
+
+        const expireTime = new Date(order.expires_at).getTime();
+        const remainingDeleteMs = expireTime - now.getTime();
+
+        const deleteTimerElement = document.querySelector(`[data-order-key="${orderKey}"].timer-delete`);
+        if (deleteTimerElement) {
+          if (remainingDeleteMs > 0) {
+            deleteTimerElement.textContent = formatCountdownTime(remainingDeleteMs);
+          } else {
+            deleteTimerElement.textContent = 'Menghapus...';
+          }
+        }
+      });
+    }
+
+    function startCountdownUpdates() {
+      if (countdownInterval) clearInterval(countdownInterval);
+      countdownInterval = setInterval(async () => {
+        updateTimerDisplays();
+        await checkOrderTimers();
+      }, 1000);
+    }
+
+    function initializeFAQ() {
+      document.querySelectorAll('.faq-toggle').forEach(button => {
+        button.addEventListener('click', () => {
+          const answer = button.nextElementSibling;
+          const icon = button.querySelector('span:last-child');
+          const isHidden = answer.classList.contains('hidden');
+
+          document.querySelectorAll('.faq-answer').forEach(item => item.classList.add('hidden'));
+          document.querySelectorAll('.faq-toggle span:last-child').forEach(item => item.textContent = '＋');
+
+          if (isHidden) {
+            answer.classList.remove('hidden');
+            icon.textContent = '－';
+          }
+        });
+      });
+    }
+
+    async function adminLogin() {
+      if (!supabase) {
+        showToast('Isi SUPABASE_URL dan SUPABASE_ANON_KEY dulu', 'error');
+        return;
+      }
+
+      const email = document.getElementById('admin-email').value.trim();
+      const password = document.getElementById('admin-password').value;
+
+      if (!email || !password) {
+        showToast('Email dan password wajib diisi', 'error');
+        return;
+      }
+
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        console.error(error);
+        showToast('Login admin gagal', 'error');
+        return;
+      }
+
+      adminSession = data.session;
+      document.getElementById('admin-auth-box').classList.add('hidden');
+      document.getElementById('admin-panel').classList.remove('hidden');
+      await loadAdminOrders();
+      showToast('Login admin berhasil', 'success');
+    }
+
+    async function adminLogout() {
+      if (supabase) await supabase.auth.signOut();
+      adminSession = null;
+      document.getElementById('admin-panel').classList.add('hidden');
+      document.getElementById('admin-auth-box').classList.remove('hidden');
+      showToast('Logout berhasil', 'success');
+    }
+
+    async function loadAdminOrders() {
+      if (!supabase || !adminSession) return;
+      const { data, error } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
+      if (error) {
+        console.error(error);
+        showToast('Gagal memuat order admin', 'error');
+        return;
+      }
+      updateAdminDisplay(data || []);
+    }
+
+    function copyText(text, successMessage = 'Berhasil disalin!') {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast(successMessage, 'success');
+      }).catch(() => {
+        showToast('Gagal menyalin teks', 'error');
+      });
+    }
+
+    function updateAdminDisplay(sourceOrders = null) {
+      const orders = sourceOrders || allOrders;
+      const totalEl = document.getElementById('admin-total-orders');
+      const pendingEl = document.getElementById('admin-pending-orders');
+      const processingEl = document.getElementById('admin-processing-orders');
+      const completedEl = document.getElementById('admin-completed-orders');
+      const container = document.getElementById('admin-orders-container');
+      const filterProduct = document.getElementById('admin-filter-product')?.value || '';
+      const filterStatus = document.getElementById('admin-filter-status')?.value || '';
+
+      if (!container || !totalEl || !pendingEl || !processingEl || !completedEl) return;
+
+      totalEl.textContent = orders.length;
+      pendingEl.textContent = orders.filter(o => o.status === 'pending').length;
+      processingEl.textContent = orders.filter(o => o.status === 'processing').length;
+      completedEl.textContent = orders.filter(o => o.status === 'completed').length;
+
+      let filteredOrders = [...orders];
+
+      if (filterProduct) filteredOrders = filteredOrders.filter(order => order.product_name === filterProduct);
+      if (filterStatus) filteredOrders = filteredOrders.filter(order => order.status === filterStatus);
+
+      filteredOrders.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+      if (!filteredOrders.length) {
+        container.innerHTML = `
+          <div class="card-texture rounded-2xl border border-pink-100 shadow p-8 text-center">
+            <p class="text-gray-400">Tidak ada order yang cocok dengan filter.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filteredOrders.map(order => {
+        const formattedDate = new Date(order.created_at).toLocaleDateString('id-ID', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+
+        return `
+          <div class="card-texture rounded-2xl border border-pink-100 shadow p-5">
+            <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+              <div class="flex-1 space-y-1 text-sm text-gray-600">
+                <div class="flex items-center gap-3 mb-2">
+                  <h3 class="font-bold text-lg text-gray-800">${order.product_name}</h3>
+                  <span class="status-badge ${getStatusBadgeClass(order.status)}">${getStatusText(order.status)}</span>
+                </div>
+                <p><span class="font-semibold">Paket:</span> ${order.package}</p>
+                <p><span class="font-semibold">Email:</span> ${order.email}</p>
+                <p><span class="font-semibold">Qty:</span> ${order.quantity}</p>
+                <p><span class="font-semibold">Harga:</span> Rp ${parseInt(order.total_price, 10).toLocaleString('id-ID')}</p>
+                <p class="text-xs text-gray-400">📅 ${formattedDate}</p>
+              </div>
+
+              <div class="flex flex-col gap-2 min-w-[220px]">
+                <select onchange="updateOrderStatus('${order.id}', this.value)" class="px-3 py-2 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none text-sm">
+                  <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
+                  <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>Processing</option>
+                  <option value="completed" ${order.status === 'completed' ? 'selected' : ''}>Completed</option>
+                  <option value="expired" ${order.status === 'expired' ? 'selected' : ''}>Expired</option>
+                </select>
+
+                <button onclick="copyText('${String(order.email).replace(/'/g, "\\'")}', 'Email berhasil disalin!')" class="px-4 py-2 rounded-xl border border-pink-200 bg-white text-pink-500 font-semibold text-sm hover:bg-pink-50 transition">
+                  📋 Copy Email
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function updateOrderStatus(orderId, newStatus) {
+      if (!supabase || !adminSession) return;
+      const { error } = await supabase.from('orders').update({ status: newStatus }).eq('id', orderId);
+      if (error) {
+        console.error(error);
+        showToast('Gagal update status', 'error');
+        return;
+      }
+      await loadAdminOrders();
+      if (newStatus === 'expired') {
+        const idx = allOrders.findIndex(o => o.id === orderId);
+        if (idx !== -1) allOrders[idx].status = 'expired';
+        updateHistoryDisplay();
+      }
+      showToast('Status berhasil diubah', 'success');
+    }
+
+    async function initializeAuthState() {
+      if (!supabase) return;
+
+      const { data } = await supabase.auth.getSession();
+      if (data?.session) {
+        adminSession = data.session;
+        document.getElementById('admin-auth-box').classList.add('hidden');
+        document.getElementById('admin-panel').classList.remove('hidden');
+        await loadAdminOrders();
+      }
+
+      supabase.auth.onAuthStateChange(async (_event, session) => {
+        adminSession = session;
+        if (session) {
+          document.getElementById('admin-auth-box').classList.add('hidden');
+          document.getElementById('admin-panel').classList.remove('hidden');
+          await loadAdminOrders();
+        } else {
+          document.getElementById('admin-panel').classList.add('hidden');
+          document.getElementById('admin-auth-box').classList.remove('hidden');
+        }
+      });
+    }
+
+    async function initializeApp() {
+      initializeBuyerSession();
+      initializeFAQ();
+      await initializeAuthState();
+      await loadBuyerOrders();
+      startCountdownUpdates();
+
+      document.querySelectorAll('.tab-button').forEach(button => {
+        button.addEventListener('click', function() {
+          const tabName = this.dataset.tab;
+          document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+          this.classList.add('active');
+          document.getElementById(tabName + '-tab').classList.remove('hidden');
+        });
+      });
+
+      document.querySelector('[data-tab="products"]').classList.add('active');
+
+      document.querySelectorAll('.package-option').forEach(option => {
+        option.addEventListener('click', function() {
+          selectedProduct = this.dataset.product;
+          selectedPackage = this.dataset.package;
+          selectedPrice = this.dataset.price;
+          isCapCut = this.dataset.isCapcut === 'true';
+
+          document.querySelectorAll('.package-option').forEach(p => p.classList.remove('selected'));
+          this.classList.add('selected');
+          openModal();
+        });
+      });
+
+      document.querySelectorAll('.info-tooltip button').forEach(button => {
+        button.addEventListener('click', function(e) {
+          e.stopPropagation();
+          e.preventDefault();
+          const card = this.closest('.product-card');
+          const priceTag = card.querySelector('.price-tag');
+          const titleElement = priceTag.querySelector('h2');
+          const productName = titleElement.textContent.trim();
+          openInfoModal(productName);
+        });
+      });
+
+      document.getElementById('sort-newest-btn')?.addEventListener('click', () => {
+        historySortOrder = 'newest';
+        updateHistoryDisplay();
+      });
+
+      document.getElementById('sort-oldest-btn')?.addEventListener('click', () => {
+        historySortOrder = 'oldest';
+        updateHistoryDisplay();
+      });
+
+      document.getElementById('admin-login-btn')?.addEventListener('click', adminLogin);
+      document.getElementById('admin-logout-btn')?.addEventListener('click', adminLogout);
+      document.getElementById('admin-filter-product')?.addEventListener('change', () => loadAdminOrders());
+      document.getElementById('admin-filter-status')?.addEventListener('change', () => loadAdminOrders());
+      document.getElementById('copy-all-emails-btn')?.addEventListener('click', async () => {
+        if (!supabase || !adminSession) return;
+        const { data, error } = await supabase.from('orders').select('email');
+        if (error) {
+          showToast('Gagal memuat email', 'error');
+          return;
+        }
+        const emails = (data || []).map(item => item.email).join('\n');
+        if (!emails.trim()) {
+          showToast('Belum ada email untuk disalin', 'error');
+          return;
+        }
+        copyText(emails, 'Semua email berhasil disalin!');
+      });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initializeApp);
+    } else {
+      initializeApp();
+    }
+  </script>
+</body>
+</html>
